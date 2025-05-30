@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fitness Tracker</title>
+</head>
+<body>
+  <h1>Add Workout</h1>
+
+  <form id="workoutForm">
+    <input type="text" id="userId" placeholder="User ID" required />
+    <input type="date" id="date" required />
+    <input type="text" id="type" placeholder="Workout Type" required />
+    <input type="number" id="duration" placeholder="Duration (min)" required />
+    <input type="number" id="calories" placeholder="Calories" required />
+    <button type="submit">Add Workout</button>
+  </form>
+
+  <ul id="workoutList"></ul>
+
+  <script>
+    const form = document.getElementById('workoutForm');
+    const list = document.getElementById('workoutList');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // Stop page refresh
+
+      const data = {
+        userId: document.getElementById('userId').value,
+        date: document.getElementById('date').value,
+        type: document.getElementById('type').value,
+        duration: parseInt(document.getElementById('duration').value),
+        calories: parseInt(document.getElementById('calories').value)
+      };
+
+      console.log('Submitting:', data); // ✅ Check if this appears in browser console
+
+      try {
+        const res = await fetch('http://localhost:5000/api/workouts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          console.log('Workout saved:', result);
+          form.reset();
+          loadWorkouts(data.userId);
+        } else {
+          const error = await res.json();
+          alert('Error: ' + error.message);
+        }
+      } catch (err) {
+        console.error('Fetch failed:', err);
+        alert('Network error');
+      }
+    });
+
+    async function loadWorkouts(userId) {
+      const res = await fetch(`http://localhost:5000/api/workouts/${userId}`);
+      const workouts = await res.json();
+      list.innerHTML = '';
+      workouts.forEach(w => {
+        const li = document.createElement('li');
+        li.textContent = `${w.date} - ${w.type} - ${w.duration}min - ${w.calories}cal`;
+        list.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
